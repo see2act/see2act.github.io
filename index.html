@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>See2Act: Learning to See While Learning to Act</title>
+  <meta name="description" content="Learning to See While Learning to Act: Diffusion Models for Active Perception in Robot Imitation.">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+</head>
+<body>
+
+<!-- ===================== HERO ===================== -->
+<section class="hero is-light">
+  <div class="hero-body">
+    <div class="container is-max-desktop has-text-centered">
+      <h1 class="title is-1 publication-title">
+        Learning to <span class="accent">See</span> While Learning to <span class="accent">Act</span>:<br>
+        Diffusion Models for Active Perception in Robot Imitation
+      </h1>
+
+      <div class="is-size-5 publication-authors" style="margin-top:1.2rem;">
+        <span class="author-block">Anonymous Authors</span>
+      </div>
+
+      <div style="margin-top:1.4rem;">
+        <span class="under-review-badge">Under Review</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== OVERVIEW (teaser) ===================== -->
+<section class="section" style="padding-top:2.5rem;">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 has-text-centered section-title">Overview</h2>
+    <img src="./static/images/teaser.png" alt="See2Act teaser"
+         class="method-img" style="margin-bottom:0;">
+    <p class="figure-caption" style="margin-top:0.6rem;">
+      <b>See2Act couples <i>seeing</i> and <i>acting</i> in a single denoising loop.</b>
+      At each step the camera view (<i>see</i>: highlighted region) and the predicted action
+      (<i>act</i>: shown arrow) are refined together: the action sets the next viewpoint, and the
+      new viewpoint denoises the next action. This results in a policy that repositions the camera
+      to reveal placement positions initially hidden from overhead views, achieving 95% zero-shot
+      sim-to-real transfer on tasks with occlusion.
+    </p>
+  </div>
+</section>
+
+<!-- ===================== ABSTRACT ===================== -->
+<section class="section" style="padding-top:0;">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 has-text-centered section-title">Abstract</h2>
+    <div class="content abstract-text">
+      <p>
+        Most imitation learning methods assume full observability in table-top settings. In practice,
+        objects are often occluded, requiring robots to both <i>search</i> and <i>act</i>, and
+        learning this coupled behavior from limited demonstrations remains challenging. We propose
+        <b>See2Act</b>, an imitation learning approach that conditions action prediction on a sequence
+        of actively-inferred viewpoints at test time, by coupling action denoising with viewpoint
+        refinement. The policy is trained using camera poses anchored to keyframe actions from offline
+        demonstrations, enabling implicit learning of where to <i>see</i>, while learning how to
+        <i>act</i>. We empirically demonstrate that in Ravens the policy recovers informative
+        viewpoints under severe occlusions, and on RLBench tasks it improves performance by up to 33%
+        over prior methods. In the real world, we collect 50 demonstrations in a digital twin and
+        achieve zero-shot sim-to-real transfer on pick-and-place tasks using depth observations. The
+        policy handles significant occlusions, showing that learned viewpoint reasoning enables robust
+        manipulation under partial observability.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== METHOD ===================== -->
+<section class="section" style="padding-top:0;">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 has-text-centered section-title">Method</h2>
+    <img src="./static/images/method.gif" alt="See2Act method overview"
+         class="method-img" style="margin-bottom:0;">
+    <p class="figure-caption" style="margin-top:0.8rem;">
+      <b><i>Left: Training.</i></b>
+      Given demonstrations -- extracted object states <i>s</i> and keyframe actions
+      <i>a</i><sub>0</sub> -- we sample diffusion timesteps <i>t</i>, compute the camera poses
+      <i>C</i><sub>0</sub>, &hellip;, <i>C<sub>T</sub></i>, render observations <i>O<sub>t</sub></i>
+      in a digital twin, and generate noisy actions <i>â<sub>t</sub></i> by transforming
+      <i>a</i><sub>0</sub> into each camera frame and adding Gaussian noise. The visual encoder and
+      score network are trained jointly to predict the noise
+      <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><mover accent="false"><mi>&epsilon;</mi><mo>&#732;</mo></mover></math>
+      with an MSE loss.
+      <br>
+      <b><i>Right: Inference.</i></b>
+      Starting from an overview view (<i>t</i> = <i>T</i>), See2Act iteratively refines both the
+      action and the camera pose: at each denoising step it captures an observation, predicts the
+      noise, updates the action estimate, and computes the next camera pose. The final action is
+      executed by the robot.
+    </p>
+  </div>
+</section>
+
+<!-- ===================== RAVENS BENCHMARK ===================== -->
+<section class="section" style="padding-top:0;">
+  <div class="container is-wide">
+    <h2 class="title is-3 has-text-centered section-title">Ravens Benchmark</h2>
+    <p class="has-text-centered figure-caption" style="margin-bottom:1.5rem;">
+      A diagnostic benchmark for tasks with occlusion. The base task is fully observable;
+      three variants add front-view occlusions. <i>Hover a card for details.</i>
+    </p>
+    <div class="ravens-grid">
+      <div class="task-card">
+        <img class="task-media" src="./static/videos/ravens/place-red-in-green.gif" alt="Place Red in Green">
+        <div class="task-body">
+          <div class="task-name">Place-Red-in-Green <span class="task-chev">&#9662;</span></div>
+          <div class="task-desc">
+            Pick the red block and place it in the green bowl, with colored blocks and bowls as
+            distractors. The base, fully-observable diagnostic task.
+          </div>
+        </div>
+      </div>
+      <div class="task-card">
+        <img class="task-media" src="./static/videos/ravens/bin-picking.gif" alt="Bin Picking">
+        <div class="task-body">
+          <div class="task-name">Bin-Picking <span class="task-chev">&#9662;</span></div>
+          <div class="task-desc">
+            The red block is initialized inside a single open-topped bin, invisible from the front
+            view -- the policy must look inside to locate it.
+          </div>
+        </div>
+      </div>
+      <div class="task-card">
+        <img class="task-media" src="./static/videos/ravens/put-within-shelf.gif" alt="Put Within Shelf">
+        <div class="task-body">
+          <div class="task-name">Put-Within-Shelf <span class="task-chev">&#9662;</span></div>
+          <div class="task-desc">
+            The red block and green bowl are hidden on the top and bottom levels of a shelf,
+            respectively, requiring views into both occluded levels.
+          </div>
+        </div>
+      </div>
+      <div class="task-card">
+        <img class="task-media" src="./static/videos/ravens/bin-search.gif" alt="Bin Search">
+        <div class="task-body">
+          <div class="task-name">Bin-Search <span class="task-chev">&#9662;</span></div>
+          <div class="task-desc">
+            The red block is placed at random inside one of three open-topped bins, while the green
+            bowl stays visible on the table -- the policy must search the bins.
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="takeaway">
+      <p>
+        <span class="lead">See2Act achieves the highest success rate on all four tasks
+        (96%, 96%, 72%, 100%),</span> substantially outperforming all baselines, especially on the
+        more heavily occluded variants where prior methods largely fail.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== REAL ROBOT SETUP ===================== -->
+<section class="section" style="padding-top:0;">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 has-text-centered section-title">Real Robot Setup</h2>
+    <img src="./static/images/setup.png" alt="Real-world experimental setup"
+         class="method-img" style="margin-bottom:0;">
+    <p class="figure-caption" style="margin-top:0.6rem;">
+      <b>Real-world tasks</b> showing initial, pick, place states.
+      <span class="occ-swatch"></span> <span style="color:var(--ours-blue);font-weight:600;">Blue</span>
+      region shows the area occluded from the camera at its initial overhead pose. Arrows indicate
+      transition from initial to goal.
+    </p>
+  </div>
+</section>
+
+<!-- ===================== REAL ROBOT RESULTS ===================== -->
+<section class="section" style="padding-top:0;">
+  <div class="container is-wide">
+    <h2 class="title is-3 has-text-centered section-title">Real Robot Results</h2>
+
+    <!-- Flagship overview video -->
+    <div class="flagship-wrap">
+      <div class="flagship-label">See2Act -- Clean Up (Walkthrough)</div>
+      <video class="cmp-video" muted loop playsinline controls preload="none"
+             poster="./static/videos/real/see2act-overview.jpg">
+        <source src="./static/videos/real/see2act-overview.mp4" type="video/mp4"></video>
+    </div>
+    <p class="has-text-centered figure-caption" style="margin-bottom:2rem;">
+      Detailed walkthrough of our flagship task with step-by-step explanations.
+    </p>
+
+    <p class="has-text-centered figure-caption" style="margin-bottom:1.5rem;">
+      Comparison of See2Act (<span style="color:var(--ours-blue);font-weight:600;">ours</span>)
+      against diffusion-based multiview baselines on real-robot tasks with occlusion.
+    </p>
+
+    <!-- Task 1 -->
+    <div class="task-card is-text" style="margin-top:1.8rem;">
+      <div class="task-body">
+        <div class="task-name">Shelf-Kitting <span class="task-chev">&#9662;</span></div>
+        <div class="task-desc">
+          A high-precision insertion task: a <b>base</b> object, initially hidden inside a shelf, must
+          be retrieved and inserted into its matching kit receptacle within <b>1-2&nbsp;mm</b>
+          positional and <b>1-2&deg;</b> rotational tolerance. Success is releasing the base
+          within this tolerance.
+        </div>
+      </div>
+    </div>
+    <div class="method-grid">
+      <div class="method-card is-ours">
+        <div class="method-label">See2Act (Ours)</div>
+        <div class="video-wrap">
+          <video class="cmp-video" muted loop playsinline controls controlsList="nofullscreen nodownload" preload="none"
+                 poster="./static/videos/real/shelf-kitting/see2act.jpg">
+            <source src="./static/videos/real/shelf-kitting/see2act.mp4" type="video/mp4"></video>
+        </div>
+      </div>
+      <div class="method-card">
+        <div class="method-label">Diffusion-MV</div>
+        <div class="video-wrap">
+          <video class="cmp-video" muted loop playsinline controls controlsList="nofullscreen nodownload" preload="none"
+                 poster="./static/videos/real/shelf-kitting/diff-mv.jpg">
+            <source src="./static/videos/real/shelf-kitting/diff-mv.mp4" type="video/mp4"></video>
+        </div>
+      </div>
+      <div class="method-card">
+        <div class="method-label">Diffusion-MV-Entropy</div>
+        <div class="video-wrap">
+          <video class="cmp-video" muted loop playsinline controls controlsList="nofullscreen nodownload" preload="none"
+                 poster="./static/videos/real/shelf-kitting/diff-mv-entropy.jpg">
+            <source src="./static/videos/real/shelf-kitting/diff-mv-entropy.mp4" type="video/mp4"></video>
+        </div>
+      </div>
+    </div>
+
+    <!-- Task 2 -->
+    <div class="task-card is-text" style="margin-top:2.2rem;">
+      <div class="task-body">
+        <div class="task-name">Clean-Up <span class="task-chev">&#9662;</span></div>
+        <div class="task-desc">
+          The robot returns two <b>wheels</b> and one <b>base</b> from randomized table locations to an
+          occluded shelf, repositioning its camera to identify valid placement regions. To remove
+          pick-order ambiguity, training labels follow the object closest to the view center at each
+          step.
+        </div>
+      </div>
+    </div>
+    <div class="method-grid">
+      <div class="method-card is-ours">
+        <div class="method-label">See2Act (Ours)</div>
+        <div class="video-wrap">
+          <video class="cmp-video" muted loop playsinline controls controlsList="nofullscreen nodownload" preload="none"
+                 poster="./static/videos/real/clean-up/see2act.jpg">
+            <source src="./static/videos/real/clean-up/see2act.mp4" type="video/mp4"></video>
+        </div>
+      </div>
+      <div class="method-card">
+        <div class="method-label">Diffusion-MV</div>
+        <div class="video-wrap">
+          <video class="cmp-video" muted loop playsinline controls controlsList="nofullscreen nodownload" preload="none"
+                 poster="./static/videos/real/clean-up/diff-mv.jpg">
+            <source src="./static/videos/real/clean-up/diff-mv.mp4" type="video/mp4"></video>
+        </div>
+      </div>
+      <div class="method-card">
+        <div class="method-label">Diffusion-MV-Entropy</div>
+        <div class="video-wrap">
+          <video class="cmp-video" muted loop playsinline controls controlsList="nofullscreen nodownload" preload="none"
+                 poster="./static/videos/real/clean-up/diff-mv-entropy.jpg">
+            <source src="./static/videos/real/clean-up/diff-mv-entropy.mp4" type="video/mp4"></video>
+        </div>
+      </div>
+    </div>
+
+    <div class="takeaway">
+      <p>
+        <span class="lead">See2Act reaches 95% on both shelf-kitting and clean-up from only 50
+        demonstrations,</span> while Diffusion-MV (25%/50%) and Diffusion-MV-Entropy (50%/50%) need
+        6,000x more training data. By repositioning its camera close to the target as the action
+        denoises, See2Act gets the close-up views needed for tight-tolerance insertion and stays
+        robust to sim-to-real calibration error, which fixed-view baselines cannot match.
+      </p>
+    </div>
+    <p class="paper-ref">For more details and insights, please refer to the paper.</p>
+  </div>
+</section>
+
+<!-- ===================== CONCLUSION ===================== -->
+<section class="section" style="padding-top:0;">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 has-text-centered section-title">Limitations and Conclusion</h2>
+    <div class="content abstract-text">
+      <p>
+        We presented <b>See2Act</b>, a diffusion-based visuomotor imitation learning framework that
+        jointly denoises actions and full 6-DoF camera trajectories, enabling active perception to
+        resolve occlusions that fixed-view and zoom-only methods cannot handle. Our approach achieves
+        strong performance on tasks requiring active search and precise placement, and transfers
+        zero-shot from simulation to a real robot using depth observations, reaching 95% success with
+        only 50 demonstrations. Requiring a new observation at every denoising step comes with a
+        latency cost, making execution dependent on camera latency and slower than fixed-view methods.
+        We also foresee extending See2Act to dense trajectory prediction as promising future work,
+        expanding the benefits of our framework to dexterous and dynamic manipulation.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FOOTER ===================== -->
+<footer class="footer" style="padding:2.5rem 1.5rem;">
+  <div class="container has-text-centered footer-attribution">
+    <p>
+      Website template borrowed from
+      <a href="https://github.com/nerfies/nerfies.github.io">Nerfies</a>,
+      licensed under
+      <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>.
+    </p>
+  </div>
+</footer>
+
+<!-- ===================== VIDEO AUTOPLAY / LAZY-LOAD ===================== -->
+<script id="cmp-video-autoplay">
+(function () {
+  var videos = Array.prototype.slice.call(document.querySelectorAll('video.cmp-video'));
+
+  videos.forEach(function (v) {
+    // Videos with native controls already show the browser's own buffering
+    // spinner, so only add our custom spinner to videos that lack controls
+    // (avoids two overlapping loading indicators).
+    if (!v.hasAttribute('controls')) {
+      var wrap = v.parentElement;
+      var spinner = document.createElement('div');
+      spinner.className = 'cmp-spinner';
+      wrap.appendChild(spinner);
+      var hide = function () { spinner.style.display = 'none'; };
+      var show = function () { spinner.style.display = 'block'; };
+      v.addEventListener('playing', hide);
+      v.addEventListener('waiting', show);
+      v.addEventListener('error', hide);
+    }
+    v.addEventListener('loadeddata', function () { if (v.paused && v.dataset.want) tryPlay(v); });
+  });
+
+  function tryPlay(v) {
+    var p = v.play();
+    if (p && p.catch) p.catch(function () {});
+  }
+
+  function load(v) {
+    v.dataset.want = '1';
+    v.muted = true;                       // ensure property is set so autoplay is allowed
+    if (!v.dataset.loaded) {
+      v.dataset.loaded = '1';
+      v.setAttribute('preload', 'auto');
+      try { v.load(); } catch (e) {}
+    }
+    tryPlay(v);
+  }
+  function unload(v) {
+    v.dataset.want = '';
+    try { v.pause(); } catch (e) {}
+  }
+
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) load(e.target); else unload(e.target);
+      });
+    }, { rootMargin: '150px 0px' });
+    videos.forEach(function (v) { io.observe(v); });
+  } else {
+    videos.forEach(load);
+  }
+})();
+</script>
+
+</body>
+</html>
